@@ -314,22 +314,19 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
     ctx.textAlign = 'left';
 
     // Power-up timers
-    if (frenzyTimer.current > 0) {
-        const frenzyProgress = frenzyTimer.current / FRENZY_DURATION;
-        ctx.fillStyle = `${FRENZY_COLOR}80`;
-        ctx.fillRect(0, GAME_HEIGHT - 10, GAME_WIDTH * frenzyProgress, 10);
-    }
-    if (slowMoTimer.current > 0) {
-        const slowMoProgress = slowMoTimer.current / SLOW_MOTION_DURATION;
-        ctx.fillStyle = `${CLOCK_COLOR}80`;
-        ctx.fillRect(0, GAME_HEIGHT - 10, GAME_WIDTH * slowMoProgress, 10);
-    }
-    if (multiplierTimer.current > 0) {
-        const multiplierProgress = multiplierTimer.current / MULTIPLIER_DURATION;
-        const startX = slowMoTimer.current > 0 ? GAME_WIDTH * (slowMoTimer.current / SLOW_MOTION_DURATION) : 0;
-        ctx.fillStyle = `${STAR_COLOR}80`;
-        ctx.fillRect(startX, GAME_HEIGHT - 10, GAME_WIDTH * multiplierProgress, 10);
-    }
+    let barOffset = 0;
+    const drawPowerUpBar = (progress: number, color: string) => {
+        if (progress > 0) {
+            const barWidth = GAME_WIDTH * progress;
+            ctx.fillStyle = color;
+            ctx.fillRect(barOffset, GAME_HEIGHT - 10, barWidth, 10);
+            barOffset += barWidth;
+        }
+    };
+
+    drawPowerUpBar(frenzyTimer.current / FRENZY_DURATION, `${FRENZY_COLOR}B3`);
+    drawPowerUpBar(slowMoTimer.current / SLOW_MOTION_DURATION, `${CLOCK_COLOR}B3`);
+    drawPowerUpBar(multiplierTimer.current / MULTIPLIER_DURATION, `${STAR_COLOR}B3`);
   };
 
   const addFloatingText = (text: string, x: number, y: number) => {
@@ -514,7 +511,7 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
     ctx.restore();
     
     requestAnimationFrame(gameLoop);
-  }, [isPaused, onGameOver, onPause, spawnItem]);
+  }, [isPaused, onGameOver, spawnItem]);
   
   const handleResize = useCallback(() => {
     const canvas = canvasRef.current; const container = gameContainerRef.current;
@@ -540,12 +537,15 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
     const handleTouchStart = (e: TouchEvent) => { inputState.current.touchX = getTouchX(e); };
     const handleTouchMove = (e: TouchEvent) => { e.preventDefault(); inputState.current.touchX = getTouchX(e); };
     const handleTouchEnd = () => { inputState.current.touchX = null; };
+    
     window.addEventListener('keydown', handleKeyDown); window.addEventListener('keyup', handleKeyUp);
     const canvasEl = canvasRef.current;
     canvasEl?.addEventListener('touchstart', handleTouchStart); 
     canvasEl?.addEventListener('touchmove', handleTouchMove, { passive: false }); 
     canvasEl?.addEventListener('touchend', handleTouchEnd);
+    
     requestAnimationFrame(gameLoop);
+    
     return () => {
         window.removeEventListener('resize', handleResize); window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('keyup', handleKeyUp); 
