@@ -17,7 +17,7 @@ export const LINE_WIDTH = 5;
 // Player settings
 export const PLAYER_WIDTH = 80;
 export const PLAYER_HEIGHT = 100;
-export const PLAYER_SPEED = 500; // pixels per second
+export const PLAYER_SPEED = 600; // pixels per second
 export const BASKET_OFFSET_Y = 60;
 export const BASKET_WIDTH = 90;
 export const BASKET_HEIGHT = 20;

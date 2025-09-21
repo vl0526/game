@@ -9,7 +9,7 @@ const InstructionsModal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     { name: 'Trái Tim', color: HEART_COLOR, description: 'Phục hồi 1 mạng.', shape: 'heart' },
     { name: 'Đồng Hồ', color: CLOCK_COLOR, description: 'Làm chậm thời gian.', shape: 'clock' },
     { name: 'Ngôi Sao', color: STAR_COLOR, description: 'x2 điểm trong 7 giây!', shape: 'star' },
-    { name: 'Ớt Cay', color: FRENZY_COLOR, description: 'Kích hoạt Frenzy Mode! Mưa trứng vàng!', shape: 'chili' },
+    { name: 'Ớt Cay', color: FRENZY_COLOR, description: 'Kích hoạt Frenzy! Mưa trứng vàng!', shape: 'chili' },
     { name: 'Trứng Thối', color: ROTTEN_EGG_COLOR, description: 'Bắt trúng sẽ -1 mạng.', shape: 'egg' },
     { name: 'Bom', color: BOMB_COLOR, description: 'BÙM! Bắt trúng sẽ -1 mạng.', shape: 'bomb' },
   ];

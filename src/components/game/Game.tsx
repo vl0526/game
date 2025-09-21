@@ -314,19 +314,22 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
     ctx.textAlign = 'left';
 
     // Power-up timers
-    let barOffset = 0;
-    const drawPowerUpBar = (progress: number, color: string) => {
-        if (progress > 0) {
-            const barWidth = GAME_WIDTH * progress;
+    let totalBarWidth = GAME_WIDTH;
+    let currentX = 0;
+
+    const drawPowerUpBar = (timer: number, duration: number, color: string) => {
+        if (timer > 0) {
+            const progress = timer / duration;
+            const barWidth = totalBarWidth * progress;
             ctx.fillStyle = color;
-            ctx.fillRect(barOffset, GAME_HEIGHT - 10, barWidth, 10);
-            barOffset += barWidth;
+            ctx.fillRect(currentX, GAME_HEIGHT - 10, barWidth, 10);
+            currentX += barWidth;
         }
     };
-
-    drawPowerUpBar(frenzyTimer.current / FRENZY_DURATION, `${FRENZY_COLOR}B3`);
-    drawPowerUpBar(slowMoTimer.current / SLOW_MOTION_DURATION, `${CLOCK_COLOR}B3`);
-    drawPowerUpBar(multiplierTimer.current / MULTIPLIER_DURATION, `${STAR_COLOR}B3`);
+    
+    drawPowerUpBar(frenzyTimer.current, FRENZY_DURATION, `${FRENZY_COLOR}B3`);
+    drawPowerUpBar(multiplierTimer.current, MULTIPLIER_DURATION, `${STAR_COLOR}B3`);
+    drawPowerUpBar(slowMoTimer.current, SLOW_MOTION_DURATION, `${CLOCK_COLOR}B3`);
   };
 
   const addFloatingText = (text: string, x: number, y: number) => {
@@ -356,7 +359,7 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
   const spawnItem = useCallback(() => {
     let type: EggType;
     if (frenzyTimer.current > 0) {
-        type = EggType.GOLDEN;
+        type = Math.random() < 0.8 ? EggType.GOLDEN : EggType.NORMAL;
     } else {
         const rand = Math.random();
         if (rand < 0.02) type = EggType.HEART;
