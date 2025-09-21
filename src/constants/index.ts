@@ -11,6 +11,7 @@ export const BOMB_COLOR = '#333333'; // Dark Gray
 export const HEART_COLOR = '#e53e3e'; // Red for heart
 export const CLOCK_COLOR = '#3b82f6'; // Blue for clock
 export const STAR_COLOR = '#ffde0a'; // Bright yellow for star
+export const FRENZY_COLOR = '#ff4500'; // OrangeRed for chili
 export const LINE_WIDTH = 5;
 
 // Player settings
@@ -30,6 +31,8 @@ export const HEART_HEIGHT = 35;
 export const CLOCK_RADIUS = 20;
 export const STAR_WIDTH = 35;
 export const STAR_HEIGHT = 35;
+export const FRENZY_WIDTH = 35;
+export const FRENZY_HEIGHT = 45;
 export const INITIAL_EGG_SPEED = 100;
 export const INITIAL_SPAWN_RATE = 1.2; // seconds
 export const MAX_DIFFICULTY_SCORE = 500;
@@ -39,6 +42,7 @@ export const SLOW_MOTION_DURATION = 5000; // 5 seconds in ms
 export const SLOW_MOTION_FACTOR = 0.5;
 export const MULTIPLIER_DURATION = 7000; // 7 seconds in ms
 export const SCORE_MULTIPLIER = 2;
+export const FRENZY_DURATION = 5000; // 5 seconds in ms
 
 // Scoring
 export const SCORE_NORMAL = 1;

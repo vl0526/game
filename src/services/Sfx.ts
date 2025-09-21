@@ -152,6 +152,12 @@ class Sfx {
     setTimeout(() => this.playSound({ frequency: 1600, duration: 0.1, type: 'sine', volume: 0.3 }), 80);
     setTimeout(() => this.playSound({ frequency: 2000, duration: 0.15, type: 'sine', volume: 0.3 }), 160);
   }
+
+  playFrenzyCatch() {
+    this.playSound({ frequency: 600, duration: 0.1, type: 'sawtooth', volume: 0.3 });
+    setTimeout(() => this.playSound({ frequency: 800, duration: 0.1, type: 'sawtooth', volume: 0.3 }), 80);
+    setTimeout(() => this.playSound({ frequency: 1200, duration: 0.15, type: 'sawtooth', volume: 0.3 }), 160);
+  }
 }
 
 export default Sfx;

@@ -1,6 +1,6 @@
 import React from 'react';
-import DoodleButton from './DoodleButton';
-import { ROTTEN_EGG_COLOR, GOLDEN_EGG_COLOR, PRIMARY_COLOR, BOMB_COLOR, HEART_COLOR, CLOCK_COLOR, STAR_COLOR } from '../../constants';
+import DoodleButton from '../components/ui/DoodleButton';
+import { ROTTEN_EGG_COLOR, GOLDEN_EGG_COLOR, PRIMARY_COLOR, BOMB_COLOR, HEART_COLOR, CLOCK_COLOR, STAR_COLOR, FRENZY_COLOR } from '../constants';
 
 const InstructionsModal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const instructions = [
@@ -9,6 +9,7 @@ const InstructionsModal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     { name: 'Trái Tim', color: HEART_COLOR, description: 'Phục hồi 1 mạng.', shape: 'heart' },
     { name: 'Đồng Hồ', color: CLOCK_COLOR, description: 'Làm chậm thời gian.', shape: 'clock' },
     { name: 'Ngôi Sao', color: STAR_COLOR, description: 'x2 điểm trong 7 giây!', shape: 'star' },
+    { name: 'Ớt Cay', color: FRENZY_COLOR, description: 'Kích hoạt Frenzy Mode! Mưa trứng vàng!', shape: 'chili' },
     { name: 'Trứng Thối', color: ROTTEN_EGG_COLOR, description: 'Bắt trúng sẽ -1 mạng.', shape: 'egg' },
     { name: 'Bom', color: BOMB_COLOR, description: 'BÙM! Bắt trúng sẽ -1 mạng.', shape: 'bomb' },
   ];
@@ -29,6 +30,13 @@ const InstructionsModal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           <div style={{width: '2px', height: '1rem', backgroundColor: 'currentColor', transform: 'rotate(12deg)', marginRight: '-2px'}}></div>
           <div style={{width: '2px', height: '0.75rem', backgroundColor: 'currentColor', transform: 'translateY(-2px) rotate(-45deg)'}}></div>
         </div>;
+      case 'chili':
+         return (
+            <svg width="35" height="45" viewBox="0 0 50 60" className="transform -rotate-12" style={{filter: `drop-shadow(0 0 8px ${item.color})`}}>
+                <path d="M 25,55 C 5,-5 45,-5 25,55" stroke={item.color} strokeWidth="6" fill="none" strokeLinecap="round"/>
+                <path d="M 25,27 C 30,15 35,5 40,0" stroke="green" strokeWidth="5" fill="none" strokeLinecap="round"/>
+            </svg>
+         );
       default:
         return null;
     }
@@ -47,7 +55,7 @@ const InstructionsModal: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         <p className="mt-4"><span className="font-bold text-[#0048ab]">Mục tiêu:</span> Hứng các vật phẩm để ghi điểm và sống sót lâu nhất!</p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-8 w-full max-w-3xl">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 w-full max-w-4xl">
         {instructions.map(item => (
           <div key={item.name} className="p-3 border-4 border-dashed border-[#0048ab] rounded-2xl flex flex-col items-center text-center h-full">
             <div className="w-12 h-14 flex items-center justify-center mb-2">

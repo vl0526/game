@@ -1,7 +1,5 @@
-
-
 import React, { useRef, useEffect, useCallback } from 'react';
-import { Egg, EggType, FloatingText, Particle, GameStats } from '../types';
+import { Egg, EggType, FloatingText, Particle, GameStats } from '../../types';
 import {
   GAME_WIDTH,
   GAME_HEIGHT,
@@ -39,8 +37,12 @@ import {
   STAR_WIDTH,
   STAR_HEIGHT,
   STAR_COLOR,
-} from '../constants';
-import Sfx from '../services/Sfx';
+  FRENZY_COLOR,
+  FRENZY_WIDTH,
+  FRENZY_HEIGHT,
+  FRENZY_DURATION,
+} from '../../constants';
+import Sfx from '../../services/Sfx';
 
 interface GameProps {
   onGameOver: (score: number, stats: GameStats) => void;
@@ -70,6 +72,7 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
   const slowMoTimer = useRef(0);
   const scoreMultiplier = useRef(1);
   const multiplierTimer = useRef(0);
+  const frenzyTimer = useRef(0);
   const gameStats = useRef<GameStats>({ goldenEggs: 0, bombsHit: 0, rottenHit: 0, starsCaught: 0 });
 
   const drawDoodleText = (ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number, color: string) => {
@@ -89,11 +92,9 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
 
     const centerX = x + PLAYER_WIDTH / 2;
     
-    // Basket position is determined by game logic.
     const basketY = y + BASKET_OFFSET_Y;
     const basketX = centerX - BASKET_WIDTH / 2;
 
-    // --- Build robot from the ground up to fit PLAYER_HEIGHT ---
     const playerBottom = y + PLAYER_HEIGHT;
     const legHeight = 20;
     const bodyHeight = 40;
@@ -103,7 +104,6 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
     const bodyTopY = legTopY - bodyHeight;
     const headTopY = bodyTopY - headSize;
 
-    // --- Legs ---
     const bodyWidth = 40;
     ctx.beginPath();
     ctx.moveTo(centerX - bodyWidth / 4, legTopY);
@@ -112,11 +112,10 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
     ctx.lineTo(centerX + bodyWidth / 4, playerBottom);
     ctx.stroke();
 
-    // --- Body ---
     ctx.beginPath();
     ctx.rect(centerX - bodyWidth / 2, bodyTopY, bodyWidth, bodyHeight);
     ctx.stroke();
-    // Body detail
+
     ctx.beginPath();
     ctx.moveTo(centerX - bodyWidth/4, bodyTopY + 10);
     ctx.lineTo(centerX + bodyWidth/4, bodyTopY + 10);
@@ -126,12 +125,10 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
     ctx.stroke();
     ctx.lineWidth = LINE_WIDTH;
     
-    // --- Head ---
     ctx.beginPath();
     ctx.rect(centerX - headSize / 2, headTopY, headSize, headSize);
     ctx.stroke();
     
-    // Antenna
     ctx.beginPath();
     ctx.moveTo(centerX, headTopY);
     ctx.lineTo(centerX, headTopY - 10);
@@ -140,7 +137,6 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
     ctx.arc(centerX, headTopY - 12, 3, 0, Math.PI * 2);
     ctx.fill();
 
-    // Eye
     const eyeY = headTopY + headSize / 2;
     ctx.beginPath();
     ctx.arc(centerX, eyeY, headSize / 4, 0, Math.PI * 2);
@@ -149,7 +145,6 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
     ctx.arc(centerX, eyeY, headSize / 8, 0, Math.PI * 2);
     ctx.fill();
     
-    // --- Arms ---
     ctx.beginPath();
     ctx.moveTo(centerX - bodyWidth / 2, bodyTopY + 10);
     ctx.lineTo(basketX + 5, basketY + BASKET_HEIGHT / 2);
@@ -157,7 +152,6 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
     ctx.lineTo(basketX + BASKET_WIDTH - 5, basketY + BASKET_HEIGHT / 2);
     ctx.stroke();
 
-    // --- Basket ---
     ctx.beginPath();
     ctx.moveTo(basketX, basketY);
     ctx.lineTo(basketX, basketY + BASKET_HEIGHT);
@@ -234,24 +228,37 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
         let rot = Math.PI / 2 * 3;
         const cx = item.x + item.width / 2;
         const cy = item.y + item.height / 2;
-        let x = cx;
-        let y = cy;
         let step = Math.PI / spikes;
 
         for (let i = 0; i < spikes * 2; i++) {
             const radius = (i % 2 === 0) ? outerRadius : innerRadius;
-            x = cx + Math.cos(rot) * radius;
-            y = cy + Math.sin(rot) * radius;
-            if (i === 0) {
-                ctx.moveTo(x, y);
-            } else {
-                ctx.lineTo(x, y);
-            }
+            const x = cx + Math.cos(rot) * radius;
+            const y = cy + Math.sin(rot) * radius;
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
             rot += step;
         }
         ctx.closePath();
         ctx.stroke();
         ctx.fill();
+        break;
+      case EggType.FRENZY:
+          ctx.strokeStyle = FRENZY_COLOR;
+          ctx.shadowColor = FRENZY_COLOR;
+          ctx.shadowBlur = 15;
+          ctx.lineWidth = 4;
+          const chiliX = item.x + item.width / 2;
+          const chiliY = item.y;
+          ctx.beginPath();
+          ctx.moveTo(chiliX, chiliY + item.height);
+          ctx.quadraticCurveTo(item.x - 10, item.y + item.height * 0.7, chiliX, chiliY + item.height * 0.5);
+          ctx.quadraticCurveTo(item.x + item.width + 10, item.y + item.height * 0.7, chiliX, chiliY + item.height);
+          ctx.stroke();
+          // stem
+          ctx.strokeStyle = '#008000';
+          ctx.beginPath();
+          ctx.moveTo(chiliX, chiliY + item.height * 0.5);
+          ctx.quadraticCurveTo(chiliX + 5, chiliY + 10, chiliX + 10, chiliY);
+          ctx.stroke();
         break;
       default:
         ctx.strokeStyle = PRIMARY_COLOR;
@@ -271,7 +278,7 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
   };
 
   const drawUI = (ctx: CanvasRenderingContext2D) => {
-    drawDoodleText(ctx, `Score: ${score.current}`, 20, 40, 30, PRIMARY_COLOR);
+    drawDoodleText(ctx, `Điểm: ${score.current}`, 20, 40, 30, PRIMARY_COLOR);
 
     for (let i = 0; i < lives.current; i++) {
         ctx.strokeStyle = PRIMARY_COLOR;
@@ -296,12 +303,22 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
         ctx.fillRect(barX, 55, barWidth * Math.min(comboProgress, 1), 15);
     }
     
-    if (comboActive.current) {
-        drawDoodleText(ctx, 'COMBO x2!', GAME_WIDTH / 2 - 100, 45, 40, GOLDEN_EGG_COLOR);
+    ctx.textAlign = 'center';
+    if (frenzyTimer.current > 0) {
+        drawDoodleText(ctx, 'FRENZY!', GAME_WIDTH / 2, 45, 40, FRENZY_COLOR);
+    } else if (comboActive.current) {
+        drawDoodleText(ctx, 'COMBO x2!', GAME_WIDTH / 2, 45, 40, GOLDEN_EGG_COLOR);
     } else if (scoreMultiplier.current > 1) {
-        drawDoodleText(ctx, `SCORE x${scoreMultiplier.current}!`, GAME_WIDTH / 2 - 100, 45, 40, STAR_COLOR);
+        drawDoodleText(ctx, `ĐIỂM x${scoreMultiplier.current}!`, GAME_WIDTH / 2, 45, 40, STAR_COLOR);
     }
+    ctx.textAlign = 'left';
 
+    // Power-up timers
+    if (frenzyTimer.current > 0) {
+        const frenzyProgress = frenzyTimer.current / FRENZY_DURATION;
+        ctx.fillStyle = `${FRENZY_COLOR}80`;
+        ctx.fillRect(0, GAME_HEIGHT - 10, GAME_WIDTH * frenzyProgress, 10);
+    }
     if (slowMoTimer.current > 0) {
         const slowMoProgress = slowMoTimer.current / SLOW_MOTION_DURATION;
         ctx.fillStyle = `${CLOCK_COLOR}80`;
@@ -309,8 +326,9 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
     }
     if (multiplierTimer.current > 0) {
         const multiplierProgress = multiplierTimer.current / MULTIPLIER_DURATION;
+        const startX = slowMoTimer.current > 0 ? GAME_WIDTH * (slowMoTimer.current / SLOW_MOTION_DURATION) : 0;
         ctx.fillStyle = `${STAR_COLOR}80`;
-        ctx.fillRect(0, GAME_HEIGHT - 10, GAME_WIDTH * multiplierProgress, 10);
+        ctx.fillRect(startX, GAME_HEIGHT - 10, GAME_WIDTH * multiplierProgress, 10);
     }
   };
 
@@ -339,15 +357,20 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
   };
 
   const spawnItem = useCallback(() => {
-    const rand = Math.random();
     let type: EggType;
-    if (rand < 0.02) type = EggType.HEART;
-    else if (rand < 0.05) type = EggType.CLOCK;
-    else if (rand < 0.09) type = EggType.STAR;
-    else if (rand < 0.15) type = EggType.BOMB;
-    else if (rand < 0.25) type = EggType.GOLDEN;
-    else if (rand < 0.40) type = EggType.ROTTEN;
-    else type = EggType.NORMAL;
+    if (frenzyTimer.current > 0) {
+        type = EggType.GOLDEN;
+    } else {
+        const rand = Math.random();
+        if (rand < 0.02) type = EggType.HEART;
+        else if (rand < 0.05) type = EggType.CLOCK;
+        else if (rand < 0.08) type = EggType.FRENZY;
+        else if (rand < 0.12) type = EggType.STAR;
+        else if (rand < 0.18) type = EggType.BOMB;
+        else if (rand < 0.28) type = EggType.GOLDEN;
+        else if (rand < 0.45) type = EggType.ROTTEN;
+        else type = EggType.NORMAL;
+    }
 
     let width, height;
     switch(type) {
@@ -355,6 +378,7 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
         case EggType.HEART: width = HEART_WIDTH; height = HEART_HEIGHT; break;
         case EggType.CLOCK: width = height = CLOCK_RADIUS * 2; break;
         case EggType.STAR: width = STAR_WIDTH; height = STAR_HEIGHT; break;
+        case EggType.FRENZY: width = FRENZY_WIDTH; height = FRENZY_HEIGHT; break;
         default: width = EGG_WIDTH; height = EGG_HEIGHT;
     }
     
@@ -375,6 +399,7 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
     const logicDt = slowMoTimer.current > 0 ? dt * SLOW_MOTION_FACTOR : dt;
     
     if (!isPaused) {
+        // --- LOGIC ---
         if (inputState.current.touchX !== null) {
             playerX.current += (inputState.current.touchX - PLAYER_WIDTH / 2 - playerX.current) * 0.2;
         } else {
@@ -384,26 +409,22 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
         playerX.current = Math.max(0, Math.min(GAME_WIDTH - PLAYER_WIDTH, playerX.current));
 
         const difficulty = Math.min(score.current / MAX_DIFFICULTY_SCORE, 1);
-        const currentSpawnRate = INITIAL_SPAWN_RATE - (INITIAL_SPAWN_RATE - 0.3) * difficulty;
+        const currentSpawnRate = frenzyTimer.current > 0 ? 0.1 : INITIAL_SPAWN_RATE - (INITIAL_SPAWN_RATE - 0.3) * difficulty;
         spawnTimer.current += logicDt;
         if (spawnTimer.current > currentSpawnRate) {
             spawnTimer.current = 0;
             spawnItem();
+            if(frenzyTimer.current > 0) spawnItem(); // Spawn two in frenzy
         }
 
-        if (slowMoTimer.current > 0) {
-            slowMoTimer.current -= dt * 1000;
-            if (slowMoTimer.current < 0) slowMoTimer.current = 0;
-        }
-        
+        if (slowMoTimer.current > 0) slowMoTimer.current = Math.max(0, slowMoTimer.current - dt * 1000);
+        if (frenzyTimer.current > 0) frenzyTimer.current = Math.max(0, frenzyTimer.current - dt * 1000);
         if (multiplierTimer.current > 0) {
             multiplierTimer.current -= dt * 1000;
-            if (multiplierTimer.current <= 0) {
-                scoreMultiplier.current = 1;
-            }
+            if (multiplierTimer.current <= 0) scoreMultiplier.current = 1;
         }
 
-        const eggBaseSpeed = INITIAL_EGG_SPEED + (300 * difficulty);
+        const eggBaseSpeed = INITIAL_EGG_SPEED + (300 * difficulty) + (frenzyTimer.current > 0 ? 150 : 0);
         eggs.current.forEach(egg => {
             egg.vy = eggBaseSpeed;
             egg.y += egg.vy * logicDt;
@@ -434,16 +455,9 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
                     case EggType.ROTTEN: lives.current--; gameStats.current.rottenHit++; sfx.current.playRottenCatch(); triggerScreenShake(8, 200); createParticles(egg.x + egg.width/2, egg.y + egg.height/2, ROTTEN_EGG_COLOR, 15); break;
                     case EggType.BOMB: lives.current--; gameStats.current.bombsHit++; sfx.current.playBomb(); triggerScreenShake(20, 500); createParticles(egg.x + egg.width/2, egg.y + egg.height/2, BOMB_COLOR, 30); break;
                     case EggType.HEART: if (lives.current < 3) lives.current++; sfx.current.playHeartCatch(); addFloatingText('+1 ♥', egg.x, egg.y); particleColor = HEART_COLOR; break;
-                    case EggType.CLOCK: slowMoTimer.current = SLOW_MOTION_DURATION; sfx.current.playClockCatch(); addFloatingText('SLOW!', egg.x, egg.y); particleColor = CLOCK_COLOR; break;
-                    case EggType.STAR:
-                        multiplierTimer.current = MULTIPLIER_DURATION;
-                        scoreMultiplier.current = SCORE_MULTIPLIER;
-                        gameStats.current.starsCaught++;
-                        sfx.current.playStarCatch();
-                        addFloatingText(`x${SCORE_MULTIPLIER} SCORE!`, egg.x, egg.y);
-                        particleColor = STAR_COLOR;
-                        particleCount = 30;
-                        break;
+                    case EggType.CLOCK: slowMoTimer.current = SLOW_MOTION_DURATION; sfx.current.playClockCatch(); addFloatingText('CHẬM!', egg.x, egg.y); particleColor = CLOCK_COLOR; break;
+                    case EggType.STAR: multiplierTimer.current = MULTIPLIER_DURATION; scoreMultiplier.current = SCORE_MULTIPLIER; gameStats.current.starsCaught++; sfx.current.playStarCatch(); addFloatingText(`x${SCORE_MULTIPLIER} ĐIỂM!`, egg.x, egg.y); particleColor = STAR_COLOR; particleCount = 30; break;
+                    case EggType.FRENZY: frenzyTimer.current = FRENZY_DURATION; sfx.current.playFrenzyCatch(); addFloatingText('FRENZY!', egg.x, egg.y); particleColor = FRENZY_COLOR; particleCount = 40; break;
                 }
                 if (pointsEarned > 0) {
                     comboCounter.current++;
@@ -454,6 +468,8 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
                     score.current += finalPoints;
                     addFloatingText(`+${finalPoints}`, egg.x, egg.y);
                     createParticles(egg.x + egg.width/2, egg.y + egg.height/2, particleColor, particleCount);
+                } else if (egg.type === EggType.ROTTEN || egg.type === EggType.BOMB) {
+                    comboCounter.current = 0; comboActive.current = false;
                 }
             }
         });
@@ -462,7 +478,7 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
         eggs.current.forEach(egg => {
            if (egg.y > GAME_HEIGHT) {
                missedEggs.add(egg.id);
-               if (egg.type !== EggType.ROTTEN && egg.type !== EggType.BOMB && egg.type !== EggType.HEART && egg.type !== EggType.CLOCK && egg.type !== EggType.STAR) {
+               if (egg.type === EggType.NORMAL || egg.type === EggType.GOLDEN) {
                    lives.current--; comboCounter.current = 0; comboActive.current = false;
                    sfx.current.playMiss(); triggerScreenShake(8, 200);
                }
@@ -481,8 +497,15 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
 
     ctx.save();
     if(screenShake.current.magnitude > 0) ctx.translate((Math.random() - 0.5) * screenShake.current.magnitude, (Math.random() - 0.5) * screenShake.current.magnitude);
-    ctx.fillStyle = BACKGROUND_COLOR;
+    
+    // Background flash for frenzy
+    if (frenzyTimer.current > 0 && Math.floor(frenzyTimer.current / 100) % 2 === 0) {
+        ctx.fillStyle = `${FRENZY_COLOR}20`;
+    } else {
+        ctx.fillStyle = BACKGROUND_COLOR;
+    }
     ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    
     drawPlayer(ctx);
     eggs.current.forEach(egg => drawFallingItem(ctx, egg));
     drawParticles(ctx);
@@ -491,7 +514,7 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
     ctx.restore();
     
     requestAnimationFrame(gameLoop);
-  }, [isPaused, onGameOver, onPause]);
+  }, [isPaused, onGameOver, onPause, spawnItem]);
   
   const handleResize = useCallback(() => {
     const canvas = canvasRef.current; const container = gameContainerRef.current;
@@ -518,17 +541,22 @@ const Game: React.FC<GameProps> = ({ onGameOver, onPause, isPaused }) => {
     const handleTouchMove = (e: TouchEvent) => { e.preventDefault(); inputState.current.touchX = getTouchX(e); };
     const handleTouchEnd = () => { inputState.current.touchX = null; };
     window.addEventListener('keydown', handleKeyDown); window.addEventListener('keyup', handleKeyUp);
-    window.addEventListener('touchstart', handleTouchStart); window.addEventListener('touchmove', handleTouchMove, { passive: false }); window.addEventListener('touchend', handleTouchEnd);
+    const canvasEl = canvasRef.current;
+    canvasEl?.addEventListener('touchstart', handleTouchStart); 
+    canvasEl?.addEventListener('touchmove', handleTouchMove, { passive: false }); 
+    canvasEl?.addEventListener('touchend', handleTouchEnd);
     requestAnimationFrame(gameLoop);
     return () => {
         window.removeEventListener('resize', handleResize); window.removeEventListener('keydown', handleKeyDown);
-        window.removeEventListener('keyup', handleKeyUp); window.removeEventListener('touchstart', handleTouchStart);
-        window.removeEventListener('touchmove', handleTouchMove); window.removeEventListener('touchend', handleTouchEnd);
+        window.removeEventListener('keyup', handleKeyUp); 
+        canvasEl?.removeEventListener('touchstart', handleTouchStart);
+        canvasEl?.removeEventListener('touchmove', handleTouchMove);
+        canvasEl?.removeEventListener('touchend', handleTouchEnd);
     };
   }, [gameLoop, handleResize, onPause]);
   
   return (
-    <div ref={gameContainerRef} className="w-full h-full flex items-center justify-center">
+    <div ref={gameContainerRef} className="w-full h-full flex items-center justify-center cursor-none">
         <canvas ref={canvasRef} className="bg-white"></canvas>
     </div>
   );

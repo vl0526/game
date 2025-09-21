@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import Game from './components/Game';
-import StartMenu from './components/ui/StartMenu';
-import GameOverScreen from './components/ui/GameOverScreen';
-import InstructionsModal from './components/ui/InstructionsModal';
+import Game from './components/game/Game';
+import StartMenu from './screens/StartMenu';
+import GameOverScreen from './screens/GameOverScreen';
+import InstructionsModal from './screens/InstructionsModal';
 import MusicToggleButton from './components/ui/MusicToggleButton';
 import MusicPlayer from './services/MusicPlayer';
 import { GameState, GameStats, LeaderboardEntry } from './types';
-import PauseMenu from './components/ui/PauseMenu';
-import NameInputScreen from './components/ui/NameInputScreen';
-import LeaderboardScreen from './components/ui/LeaderboardScreen';
+import PauseMenu from './screens/PauseMenu';
+import NameInputScreen from './screens/NameInputScreen';
+import LeaderboardScreen from './screens/LeaderboardScreen';
 import { LEADERBOARD_SIZE } from './constants';
 
 const App: React.FC = () => {
@@ -128,7 +128,7 @@ const App: React.FC = () => {
       case GameState.GAME_OVER:
         return <GameOverScreen score={score} highScore={highScore} onRestart={handleStartGame} stats={gameStats} playerName={playerName!} />;
       default:
-        return <StartMenu onStart={handleStartGame} onShowInstructions={handleShowInstructions} onShowLeaderboard={handleShowLeaderboard} playerName={playerName || "Player"} highScore={highScore} />;
+        return <StartMenu onStart={handleStartGame} onShowInstructions={handleShowInstructions} onShowLeaderboard={handleShowLeaderboard} playerName={playerName || "Người chơi"} highScore={highScore} />;
     }
   };
 

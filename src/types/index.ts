@@ -17,6 +17,7 @@ export enum EggType {
   HEART = 'HEART',
   CLOCK = 'CLOCK',
   STAR = 'STAR',
+  FRENZY = 'FRENZY',
 }
 
 export interface GameObject {
